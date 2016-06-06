@@ -25,3 +25,12 @@ modifying the `start_year` parameter.
     - Votes data uses the `bioguide` id which we index on in [legistlators.py](legistlators.py)
     - We'll need to do fuzzy searching... maybe remove common phrases (senator,
       sen., sir, ms, etc..) and then do best edit distance?
+
+
+This will store my consulting project code for Insight Data Science Fellowship.
+
+- [x] Read in voting, bills, and contributions data.  
+- [ ] Group like bill subjects.  
+- [ ] Group like contributions.  
+- [ ] Train NN to predict bill voting outcomes.  
+- [ ] Create web application.  
