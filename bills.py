@@ -67,12 +67,12 @@ def read_bills(datadir=DATADIR, start_year=None):
 def bills( datadir=DATADIR, start_year=None ):
     #this will read in bills
     raw_bills = read_bills( datadir, start_year )
-    print('not that far')
+    #print('not that far')
     data = pd.DataFrame.from_dict( raw_bills )
-    print('made it this far')
+    #print('made it this far')
     return data
-    for field in ( 'type', 'number', 'congress', 'category', 
-                   'chamber', 'date', 'subjects', 'top_subject', 'result'):
-        data[field] = data[field].astype('category')
+    #for field in ( 'type', 'number', 'congress', 'category', 
+    #               'chamber', 'date', 'subjects', 'top_subject', 'result'):
+    #    data[field] = data[field].astype('category')
     print('leaving bills')
     return data
