@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import ujson as json
 from tqdm import tqdm
+from sqlCommands import append_to_database
 
 from dateutil.parser import parse as DateParser
 import os
@@ -48,7 +49,7 @@ def parse_bills(info, datadir=DATADIR):
     bill_path = os.path.join(datadir,
         str(info['congress']),'bills/',info['type'],(info['type']+str(info['number'])),"data.json")
     data = json.load(open(bill_path))
-    info['subjects']=tuple(data['subjects'])
+    info['subjects']=list(data['subjects'])
     info['top_subject']=data['subjects_top_term']
     yield info
 
@@ -64,15 +65,15 @@ def read_bills(datadir=DATADIR, start_year=None):
             except (KeyError, TypeError) as e:
                 pass
 
-def bills( datadir=DATADIR, start_year=None ):
+def bills( dbname, engine, datadir=DATADIR, start_year=None ):
     #this will read in bills
     raw_bills = read_bills( datadir, start_year )
-    #print('not that far')
     data = pd.DataFrame.from_dict( raw_bills )
-    #print('made it this far')
-    return data
+    append_to_database(dbname,'bills',data,engine)
+    print('leaving bills')
+    return
     #for field in ( 'type', 'number', 'congress', 'category', 
     #               'chamber', 'date', 'subjects', 'top_subject', 'result'):
     #    data[field] = data[field].astype('category')
-    print('leaving bills')
-    return data
+    #print('leaving bills')
+    #return data

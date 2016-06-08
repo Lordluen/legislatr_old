@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import ujson as json
 from tqdm import tqdm
+from sqlCommands import append_to_database
 
 from dateutil.parser import parse as DateParser
 import os
@@ -72,13 +73,14 @@ def read_votes(datadir=DATADIR, start_year=None):
                 pass
 
 
-def votes(datadir=DATADIR, start_year=None):
+def votes(dbname,engine,datadir=DATADIR, start_year=None):
     raw_votes = read_votes(datadir, start_year)
     data = pd.DataFrame.from_dict(raw_votes)
-    for field in ('bill_congress', 'bill_number', 'bill_type', 'display_name',
-                  'first_name', 'id', 'last_name', 'party', 'state', 'vote',
-                  'vote_id'):
-        data[field] = data[field].astype('category')       
+    #for field in ('bill_congress', 'bill_number', 'bill_type', 'display_name',
+    #              'first_name', 'id', 'last_name', 'party', 'state', 'vote',
+    #              'vote_id'):
+    #    data[field] = data[field].astype('category')       
+    #append_to_database(dbname,'votes',data,engine)
     print('leaving votes')
     return data
 

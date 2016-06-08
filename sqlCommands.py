@@ -37,7 +37,7 @@ def pull_from_database(dbname,df_name):
     df = pd.read_sql_table(df_name,engine)
     return df
 
-def get_engine(dbname,username = USERNAME)
+def get_engine(dbname,username = USERNAME):
     #create SQLAlchemy engine.
     engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
     return engine
