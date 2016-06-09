@@ -49,3 +49,11 @@ def append_to_database(dbname,df_name,df,engine):
     df.to_sql(df_name,engine,if_exists='append')
     return
 
+def write_to_database(dbname,df_name,df,engine):
+    #will (over)write a dataFrame to a table (df_name) in the postgresql database
+    #username = 'lordluen'
+    #engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
+    df.to_sql(df_name,engine,if_exists='replace')
+    return
+
+
