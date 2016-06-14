@@ -25,9 +25,10 @@ def legislatr_output():
     #pull 'birth_month' from input field and store it
     bill_type = request.args.get('bill_type')
     bill_number = request.args.get('bill_number')
+    congress = request.args.get('congress')
     model = legis_funcs.initModel('forest')
     #retrieve the bill information
-    bill = legis_funcs.getBill(bill_type,bill_number,db)
+    bill = legis_funcs.getBill(bill_type,bill_number,congress,db)
     result = legis_funcs.runModel(model,bill)
     if result[0] == 1:
         the_result = "PASS"
