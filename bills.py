@@ -13,6 +13,7 @@ from dateutil.parser import parse as DateParser
 import os
 
 DATADIR = '../Legis_data/votes/'
+CURR_CONGRESS = 114
 RESULTMAP = {
     "INTRODUCED":2,
     "REFERRED":2,
@@ -68,6 +69,13 @@ def get_bills_files(datadir=DATADIR):
             continue #early sessions only have vote info, not actual bills.
             
 #def get_amend_files(amenddir): #another day.
+#def parse_amends(amend_file, dbname, engine):
+    
+
+
+
+
+
 
 def parse_bills(bill_file, dbname, engine):
     data = json.load(bill_file)
@@ -75,8 +83,22 @@ def parse_bills(bill_file, dbname, engine):
     top_subject=data['subjects_top_term']
     bill_type = data['bill_type']
     bill_number = data['number']
+    title = data['short_title']
+    ltitle = data['official_title']
+    amends = data['amendments']
+    congress = int(data['congress'])
+    num_amends = len(amends)
     status = data['status']
     intro_date = DateParser(data['introduced_at'])
+    active = data['history']['active']
+    #grab all committees
+    allcoms = data['committees']
+    coms = list()
+    #if len(allcoms) > 0:
+    for c in allcoms:
+        coms.append(c['committee_id'])
+    final_coms = [np.unique(coms).tolist()]
+        
     try:
         final_date = DateParser((data['summary'])['date'])
     except:
@@ -100,7 +122,39 @@ def parse_bills(bill_file, dbname, engine):
     foo['cosponsors'] = [cosponsors]
     foo['intro_date'] = intro_date
     foo['final_date'] = final_date
-    append_to_database(dbname,'allbills',foo,engine)
+    foo['title'] = title
+    foo['num_amends'] = num_amends
+    foo['otitle'] = ltitle
+    foo['committees'] = final_coms
+    foo['congress'] = congress
+    #foo['active'] = active.map({'True':1,'False':0})
+    if active == True:
+        foo['active'] = [1]
+    if active == False:
+        foo['active'] = [0]
+    #if result = 2 and active = 0 then bill died on table.
+    #if (foo['result'].iloc[0] == 2) and (active == False):
+    #    foo['final_result'] = foo['active']
+    #else:
+    #    foo['final_result'] = foo['result']
+    foo['final_result'] = foo['result'] 
+    if (foo['result'].iloc[0] == 2) and (congress < CURR_CONGRESS):
+        foo['final_result'] = [0]
+    #foo[(foo.result == 2) & (foo.active == 0)]['final_result'] = 0
+    #append_to_database(dbname,'allbills',foo,engine)
+    #append_to_database(dbname,'allbills2',foo,engine)
+    #append_to_database(dbname,'allbills3',foo,engine)
+    append_to_database(dbname,'allbills4',foo,engine)
+
+    ##grab amendments and add to a separate database.
+    #since the amendments are not labeled by subject, I will not use amendments.
+    #I could try getting all of the bill text and running tf:idf or LDA to get topics. 
+    #With that I could pull amendment topics as well. That seems like a project for another day.
+    #if amends != 0:
+    #    for a in amends:
+            
+
+
     return
 #    yield info
 
