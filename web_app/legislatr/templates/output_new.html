@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta http-equiv="Pragma" content="no-cache">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,10 +14,10 @@
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 
     <!-- Bootstrap core CSS -->
-    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="/home/lordluen/Code/InsightDS/Fast_Foward/web_app/legislatr/templates/starter-template.css" rel="stylesheet">
+    <link href="/template/starter-template.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -122,7 +121,7 @@ body {
             </div>
     
             <div class="form-group">
-              <label for="bill_number">Bill number:</label>
+              <label for="bill_number">Bill_number:</label>
               <input type="text" id="bill_number" name='bill_number' placeholder="1234">
             </div>
     
@@ -145,97 +144,15 @@ body {
       <div class="starter-template">
         <h3>Results:</h3>
         <p class="lead">{{the_result}}</p>
-        <h3>Probability of Passing:</h3>
-        <p class="lead">{{the_confidence}}%</p>
+        <h3>Confidence:</h3>
+        <p class="lead">{{the_confidence}}</p>
       </div>
 
       <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
       <script src="static/js/bootstrap.min.js"></script>
     </div>
     <div class="container">
-        <script>
-        var margin = {top: 40, right: 20, bottom: 300, left: 200},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-
-        var formatPercent = d3.format("$.");
-
-        var x = d3.scale.ordinal()
-            .rangeRoundBands([0, width], .1);
-
-        var y = d3.scale.linear()
-            .range([height, 0]);
-
-        var xAxis = d3.svg.axis()
-            .scale(x)
-            .orient("bottom");
-
-        var yAxis = d3.svg.axis()
-            .scale(y)
-            .orient("left")
-            .tickFormat(formatPercent);
-
-        var tip = d3.tip()
-          .attr('class', 'd3-tip')
-          .offset([-10, 0])
-          .html(function(d) {
-            return "<strong>Contribution: $</strong> <span style='color:red'>" + d.Contribution + "</span>";
-          })
-
-        var svg = d3.select("body").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
-        svg.call(tip);
-        
-        d3.tsv("/static/data.tsv?nocache="+(new Date()).getTime(), type, function(error, data) {
-          x.domain(data.map(function(d) { return d.Legislator; }));
-          y.domain([0, d3.max(data, function(d) { return d.Contribution; })]);
-        
-          svg.append("g")
-              .attr("class", "x axis")
-              .attr("transform", "translate(0," + height + ")")
-              .call(xAxis)
-              .selectAll("text")
-              .style("text-anchor", "end")
-              .attr("dx", "-.8em")
-              .attr("dy", ".15em")
-              .attr("transform", function (d) { return "rotate(-65)"
-              });
-        
-          svg.append("g")
-              .attr("class", "y axis")
-              .call(yAxis)
-        
-          svg.selectAll(".bar")
-              .data(data)
-            .enter().append("rect")
-              .attr("class", "bar")
-              .attr("x", function(d) { return x(d.Legislator); })
-              .attr("width", x.rangeBand())
-              .attr("y", function(d) { return y(d.Contribution); })
-              .attr("height", function(d) { return height - y(d.Contribution); })
-              .on('mouseover', tip.show)
-              .on('mouseout', tip.hide)
-
-          svg.append("text")
-            .attr("x", (width / 2))
-            .attr("y", 0 - (margin.top / 2))
-            .attr("text-anchor","middle")
-            .style("font-size","16px")
-            .style("text-decoration","underline")
-            .text("{{funders[0]}}");
-        });
-
-        d3.exit().remove();
-
-        function type(d) {
-          d.Contribution = +d.Contribution;
-          return d;
-        }
-    </script>
+        <script type="text/javascript "src="bar.js"?version=1"></script>
     </div>
 
 </body></html>

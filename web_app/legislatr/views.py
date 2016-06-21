@@ -35,4 +35,11 @@ def legislatr_output():
     if result[0] == 0:
         the_result = "FAIL"
     the_confidence = legis_funcs.modelConf(model,bill)
-    return render_template("output.html",the_result = the_result,the_confidence = the_confidence)
+    funding_tup = legis_funcs.retrieveFunding(bill_type,bill_number,congress,db)
+    legis_funcs.makeBarPlotFile(funding_tup,0) #for now just do the top ranked funder (rank = 0)
+    top_five_funders = list()
+    for x in range(0,5):
+        top_five_funders.append(funding_tup[0][x][1]) #the names of the top 5 contributors.
+    return render_template("output.html",the_result = the_result,
+        the_confidence = round(the_confidence,2),
+        funders = top_five_funders)

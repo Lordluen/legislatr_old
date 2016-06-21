@@ -122,7 +122,7 @@ body {
             </div>
     
             <div class="form-group">
-              <label for="bill_number">Bill number:</label>
+              <label for="bill_number">Bill_number:</label>
               <input type="text" id="bill_number" name='bill_number' placeholder="1234">
             </div>
     
@@ -146,7 +146,7 @@ body {
         <h3>Results:</h3>
         <p class="lead">{{the_result}}</p>
         <h3>Probability of Passing:</h3>
-        <p class="lead">{{the_confidence}}%</p>
+        <p class="lead">{{the_confidence}}</p>
       </div>
 
       <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
@@ -154,7 +154,7 @@ body {
     </div>
     <div class="container">
         <script>
-        var margin = {top: 40, right: 20, bottom: 300, left: 200},
+        var margin = {top: 40, right: 20, bottom: 30, left: 200},
         width = 960 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
@@ -197,13 +197,7 @@ body {
           svg.append("g")
               .attr("class", "x axis")
               .attr("transform", "translate(0," + height + ")")
-              .call(xAxis)
-              .selectAll("text")
-              .style("text-anchor", "end")
-              .attr("dx", "-.8em")
-              .attr("dy", ".15em")
-              .attr("transform", function (d) { return "rotate(-65)"
-              });
+              .call(xAxis);
         
           svg.append("g")
               .attr("class", "y axis")
@@ -220,13 +214,6 @@ body {
               .on('mouseover', tip.show)
               .on('mouseout', tip.hide)
 
-          svg.append("text")
-            .attr("x", (width / 2))
-            .attr("y", 0 - (margin.top / 2))
-            .attr("text-anchor","middle")
-            .style("font-size","16px")
-            .style("text-decoration","underline")
-            .text("{{funders[0]}}");
         });
 
         d3.exit().remove();
