@@ -116,7 +116,7 @@ body {
 <br><br>
 
 <div class="container-fluid">
-     <h1 class="text-center" style="font-family: 'Playfair Display', serif;"> Legislatr </h1>
+     <h1 class="text-center" style="font-family: 'Playfair Display', serif; font-size: 60px;">Legislatr</h1>
      <br>
      <br>
 </div>
@@ -136,10 +136,11 @@ body {
         </div>
     
         <div class = "container">
-            <form  action="/output" method="GET">
+            <form  action="/input" method="GET">
                 <div class="form-group">
                     <label for="congress">Congress Number: </label>
-                    <select name='congress' id="congress" type="text">
+                    <select name='congress' id="congress" type="text" disabled>
+                        <option value="{{congress}}" selected>{{congress}}</option>
                         <option value="111">111</option>
                         <option value="112">112</option>
                         <option value="113">113</option>
@@ -149,7 +150,8 @@ body {
 
                 <div class="form-group">
                     <label for="bill_type">Congressional House: </label>
-                    <select name='bill_type' id="bill_type" type="text">
+                    <select name='bill_type' id="bill_type" type="text" disabled>
+                        <option value="{{bill_type}}" selected>{{bill_type}}</option>
                         <option value="hr">House of Representatives</option>
                         <option value="s">Senate</option>
                     </select>
@@ -157,11 +159,16 @@ body {
 
                 <div class="form-group">
                     <label for="bill_number">Bill number:</label>
+                    <select name='bill_number' id="bill_number" type="text" disabled>
+                        <option value="{{bill_number}}" selected>{{bill_number}}</option>
+                    </select>
+                    <!--
                     <input type="text" id="bill_number" name='bill_number' placeholder="1234">
+                    -->
                 </div>
     
                 <div>
-                    <button type="submit" class="btn btn-default btn-lg">Predict Outcome!</button>
+                    <button type="submit" class="btn btn-default btn-lg">Start Over!</button>
                 </div>
                 <br><br>
           </form>
@@ -170,12 +177,14 @@ body {
     <div class="col-md-4">
         <div class="text-center">
             <h3>Full Title:</h3>
-            <p>Bill title will go here.</p>
+            <p>{{bill_title}}</p>
         </div>
     </div>
     <div class="col-md-4">
         <div class="text-center" style="font-size: 30px">
-            <h3>Results: {{the_result}}</h3>
+            <!--<h3>Results: {{the_result}}</h3>-->
+            <br>
+            <img src="{{img_file}}" class="img-fluid" alt="Responsive image" style='max-width: 80%;'>
             <h3>Probability of Passing: {{the_confidence}}%</h3>
         </div>
     </div> <!-- right column -->
@@ -194,8 +203,13 @@ body {
             <div class="col-md-4" id="area1">
                 <div class="text-center">
                     <h3>Breakdown of contributions for this bill.</h3>
-                    <p>This is where a pie graph will go.</p>
+                    <p>This is where a pie graph will go, but for now we use a drop down menu with the numbers included.</p>
                 </div>
+                
+
+
+
+
             </div>
             <div class="col-md-8" id="area2">
                 <div class="text-center">

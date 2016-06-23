@@ -111,6 +111,10 @@ def pull_contributions(legis,legis_all,engine):
     maybedf3 = maybedf2[matchbool]
     return maybedf3
 
+def retrieveTitle(bill_type,bill_number,congress,engine):
+    query = "SELECT otitle FROM bill_info WHERE bill_type LIKE '"+bill_type+"' AND bill_number LIKE '"+bill_number+"' AND congress = '"+congress+"' ;" #should only be one match.
+    otitle = pd.read_sql_query(query,engine)["otitle"].iloc[0]
+    return otitle
 
 def retrieveFunding(bill_type,bill_number,congress,engine):
 
@@ -217,3 +221,9 @@ def makeBarPlotFile(contrib_tup,rank) :
         for i in range(0,len(x)):
             record_file.write(str(x[i])+"\t"+str(y[i])+"\n")
     return
+
+def get_bills_list(bill_type,congress,engine) :
+    query = "SELECT bill_number FROM bill_info WHERE bill_type LIKE '"+bill_type+"' AND congress = '"+congress+"' ;" #should only be one match.
+    bill_numbers = pd.read_sql_query(query,engine)["bill_number"].tolist()
+    return bill_numbers
+    

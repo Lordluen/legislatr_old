@@ -209,9 +209,9 @@ body {
                     <div class="form-group">
                         <label for="contributor">Influential Contributors:</label>
                         <select name="contributor" id="contributor" type="text" onchange="this.form.submit()">
-                            <option value="0" selected>{{funders[0]}}</option>
+                            <option value="{{fund}}" selected>{{funders[fund]}}</option>
                             {% for con in funders %}
-                            <option value="{{loop.index}}">{{con}}</option>
+                            <option value="{{loop.index-1}}">{{con}}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -294,7 +294,7 @@ body {
             .attr("text-anchor","middle")
             .style("font-size","16px")
             .style("text-decoration","underline")
-            .text("{{funders[0]}}");
+            .text("{{funders[fund]}}");
         });
 
         d3.exit().remove();
