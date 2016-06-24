@@ -101,7 +101,7 @@
             <form action="/input4" method="GET">
                 <div class="form-group">
                     <label for="bill_number">Bill number:</label>
-                    <select name="bill_number" id="bill_number" type="text">
+                    <select name="bill_number" id="bill_number" type="text" onchange="this.form.submit()">
                         <option value="{{bill_number}}" selected>{{bill_number}}</option>
                         {% for bill in bill_list %}
                         <option value="{{bill}}">{{bill}}</option>
@@ -119,7 +119,7 @@
     <div class="col-md-4">
         <div class="text-center">
             <h3>Full Title:</h3>
-            <p>{{bill_title}}</p>
+            <p>{{bill_title|safe}}</p>
         </div>
     </div>
 </div>

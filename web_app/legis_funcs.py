@@ -202,24 +202,66 @@ def retrieveFunding(bill_type,bill_number,congress,engine):
 #sort to get the largest donators of the shared contributors
     tot_u_shared_contribs = sorted(tot_u_shared_contribs, key=lambda tup: tup[2], reverse=True)
 
-    return (tot_u_shared_contribs,shared_con) #return the shared contributions (totals, indiv)
+
+    #get influence metrics
+    contrib_df = pd.DataFrame(shared_con, columns=["rid","reg_name","amount","legis"])
+    legis = np.unique(contrib_df["legis"])
+    rids = np.unique(contrib_df["rid"])
+    shared_con_inf = list()
+    influence_df = pd.DataFrame()
+    for leg in legis:
+        for rid in rids:
+            reg_name = contrib_df[contrib_df.rid == rid]["reg_name"].iloc[0]
+            cons = contrib_df[(contrib_df.legis == leg) & (contrib_df.rid == rid)]
+            other_cons = contrib_df[(contrib_df.legis == leg)]
+            if(len(cons)) == 0:
+                inf = 0.
+            else:
+                amount = cons['amount'].iloc[0] #should only be one row in cons
+                other_amount = sum(other_cons['amount'].tolist())
+                inf = amount/other_amount #percent influence of this organization as compared to other shared contributors.
+            inf_tup = (rid,reg_name,inf,leg)
+            shared_con_inf.append(inf_tup)
+    
+    #loop over shared money to get total contributed from the shared contributors.
+    tot_u_shared_contribs_inf = list()
+    for item in range(0,len(u_sharedcontribs)):
+        tot = 0
+        rid = u_sharedcontribs[item]
+        for tup in shared_con_inf:
+            if tup[0] == rid:
+                tot = tot + tup[2]
+                name = tup[1] #could be placed in boolean to only occur once, but this is still not slow.
+        tot_u_shared_contribs_inf.append((rid,name,tot))
+    #sort to get the largest donators of the shared contributors
+    tot_u_shared_contribs_inf = sorted(tot_u_shared_contribs_inf, key=lambda tup: tup[2], reverse=True)
+
+    return (tot_u_shared_contribs,shared_con,tot_u_shared_contribs_inf,shared_con_inf) #return the shared contributions (totals, indiv)
 
 def makeBarPlotFile(contrib_tup,rank) :
     #plot the money distribution to individual senators by the largest contributor
-    rid = contrib_tup[0][rank][0]
-    name = contrib_tup[0][rank][1]
-    total = contrib_tup[0][rank][2]
-    toPlot = [x for x in contrib_tup[1] if x[0] == rid]
+    rid = contrib_tup[2][rank][0]
+    name = contrib_tup[2][rank][1]
+    total = contrib_tup[2][rank][2]
+    toPlot1 = [x for x in contrib_tup[1] if x[0] == rid]
+    toPlot2 = [x for x in contrib_tup[3] if x[0] == rid]
     #output to intermediate file
-    x = list()
-    y = list()
-    for i in toPlot:
-        x.append(i[3])
-        y.append(i[2])
+    x1 = list() #money
+    x2 = list() #influence
+    y1 = list()  #name
+    y2 = list()  #name
+    for i in range(0,len(toPlot1)):
+        x1.append(toPlot1[i][3])
+        x2.append(toPlot2[i][3])
+        y1.append(toPlot1[i][2])
+        y2.append(toPlot2[i][2])
     with open("legislatr/static/data.tsv", "w") as record_file:
         record_file.write("Legislator\tContribution\n")
-        for i in range(0,len(x)):
-            record_file.write(str(x[i])+"\t"+str(y[i])+"\n")
+        for i in range(0,len(x1)):
+            record_file.write(str(x1[i])+"\t"+str(y1[i])+"\n")
+    with open("legislatr/static/data_inf.tsv","w") as record_file:
+        for i in range(0,len(x2)):
+            record_file.write(str(x2[i])+"\t"+str(y2[i])+"\n")
     return
 
 def get_bills_list(bill_type,congress,engine) :

@@ -45,7 +45,7 @@ body {
 }
 
 .bar {
-  fill: red;
+  fill: green;
 }
 
 .bar:hover {
@@ -177,14 +177,15 @@ body {
     <div class="col-md-4">
         <div class="text-center">
             <h3>Full Title:</h3>
-            <p>{{bill_title}}</p>
+            <p>{{bill_title|safe}}</p>
         </div>
     </div>
     <div class="col-md-4">
         <div class="text-center" style="font-size: 30px">
             <!--<h3>Results: {{the_result}}</h3>-->
             <br>
-            <img src="{{img_file}}" class="img-fluid" alt="Responsive image" style='max-width: 80%;'>
+            <span class="glyphicon {{img_file}}" aria-hidden="true" style="color: {{img_color}} ; font-size: 300%;"></span>
+            <h2 style="color: {{img_color}}; font-size: 40px;"><b>{{the_result}}</b></h2>
             <h3>Probability of Passing: {{the_confidence}}%</h3>
         </div>
     </div> <!-- right column -->
@@ -209,9 +210,9 @@ body {
                     <div class="form-group">
                         <label for="contributor">Influential Contributors:</label>
                         <select name="contributor" id="contributor" type="text" onchange="this.form.submit()">
-                            <option value="0" selected>{{funders[0]}}</option>
+                            <option value="0" selected>{{funders[0]|safe}}</option>
                             {% for con in funders %}
-                            <option value="{{loop.index}}">{{con}}</option>
+                            <option value="{{loop.index-1}}">{{con|safe}}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -294,7 +295,7 @@ body {
             .attr("text-anchor","middle")
             .style("font-size","16px")
             .style("text-decoration","underline")
-            .text("{{funders[0]}}");
+            .text("{{funders[0]|safe}}");
         });
 
         d3.exit().remove();
