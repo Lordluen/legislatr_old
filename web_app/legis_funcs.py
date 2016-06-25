@@ -252,20 +252,56 @@ def makeBarPlotFile(contrib_tup,rank) :
     y2 = list()  #name
     for i in range(0,len(toPlot1)):
         x1.append(toPlot1[i][3])
-        x2.append(toPlot2[i][3])
+        #x2.append(toPlot2[i][3])
         y1.append(toPlot1[i][2])
         y2.append(toPlot2[i][2])
     with open("legislatr/static/data.tsv", "w") as record_file:
-        record_file.write("Legislator\tContribution\n")
+        record_file.write("Legislator\tContribution\tInfluence\n")
         for i in range(0,len(x1)):
-            record_file.write(str(x1[i])+"\t"+str(y1[i])+"\n")
-    with open("legislatr/static/data_inf.tsv","w") as record_file:
-        for i in range(0,len(x2)):
-            record_file.write(str(x2[i])+"\t"+str(y2[i])+"\n")
+            record_file.write(str(x1[i])+"\t"+str(y1[i])+"\t"+str(round(y2[i]*100.,2))+"\n")
+    #with open("legislatr/static/data_inf.tsv","w") as record_file:
+    #    for i in range(0,len(x2)):
+    #        record_file.write(str(x2[i])+"\t"+str(y2[i])+"\n")
     return
 
 def get_bills_list(bill_type,congress,engine) :
     query = "SELECT bill_number FROM bill_info WHERE bill_type LIKE '"+bill_type+"' AND congress = '"+congress+"' ;" #should only be one match.
     bill_numbers = pd.read_sql_query(query,engine)["bill_number"].tolist()
     return bill_numbers
+
+
+
+#def get_query_matches(bills_df, query, max_n_results, engine):
+def get_query_matches(query, engine):
+    #self is an object.
+
+    to_query = query.lower().split()
+
+    sql_query = "SELECT congress, bill_type, bill_number FROM bill_info WHERE "
+    for q in range(0,len(to_query)):
+        sql_query = sql_query + "(LOWER(otitle) LIKE '%%"+to_query[q]+"%%' OR LOWER(title) LIKE '%%"+to_query[q]+"%%') AND "
+    sql_query = sql_query[:-4]+";"
+    print(sql_query)
+    results_df = pd.read_sql_query(sql_query, engine)
+    results_df['bill_number'] = results_df['bill_number'].astype(str)
+    results_df['congress'] = results_df['congress'].astype(str)
+    return results_df
+
+    #results is list of indices corresponding to rows in the dataframe, laptops.
+    #apply 
+    #title is the name of the laptop
+    #reviews is the number of reviews for the laptop. * by reviews is for choosing an order. #maybe rank on age of bill.
+    #DF.apply applies the function to every row and outputs as a list.
+    #results = np.argsort(
+    #    self.laptops.apply(
+    #        lambda x: -int(all([word in str(x.title).lower() for word in query.lower().split()])) * x.reviews,axis=1))
+
+
+    #take query words and split
+    #if len(results) > max_n_results:  #max_n_results is the maximum number of results desired on a page.
+    #    results = results[:self.max_n_results]
+    #asins = [self.laptops['asin'].iloc[result] for result in results]  #laptops is a DF #asin is a column that corresponds to item number/identifier.
+    #return asins
+
+
     

@@ -122,6 +122,17 @@
             <p>{{bill_title|safe}}</p>
         </div>
     </div>
+    <div class="col-md-4">
+        <form action="/inputSearch" method="GET">
+            <div class="form-group">
+                <label for="query">Search: </label>
+                <input type="text" id="query" name="query" placeholder="ex. 'finance'">
+            </div>
+            <div>
+                <button type="submit" class="btn btn-default btn-lg">Search</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 </body></html>

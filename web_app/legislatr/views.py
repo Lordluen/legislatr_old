@@ -47,6 +47,31 @@ def legislatr_input4():
     app.var['title'] = title
     return render_template("input4.html", congress=congress, bill_type=bill_type, bill_list=bill_list, bill_title=title, bill_number=bill_number)
 
+@app.route('/inputSearch')
+def legislatr_inputSearch():
+    query = request.args.get('query')
+    query_db = legis_funcs.get_query_matches(query,db)
+    app.var["query_db"] = query_db
+    options = query_db["congress"].str.cat(query_db["bill_type"],sep=' : ').str.cat(query_db["bill_number"],sep=' : ').tolist()
+    app.var["options"] = options
+    return render_template("inputSearch.html", bill_options = options)
+
+@app.route('/inputSearch2')
+def legislatr_inputSearch2():
+    ind = int(request.args.get('user_choice'))
+    options = app.var["options"]
+    option = options[ind]
+    query_db = app.var["query_db"]
+    congress = query_db["congress"].iloc[ind]
+    bill_type = query_db["bill_type"].iloc[ind]
+    bill_number = query_db["bill_number"].iloc[ind]
+    title = legis_funcs.retrieveTitle(bill_type,bill_number,congress,db)
+    app.var['title'] = title
+    app.var['bill_type'] = bill_type
+    app.var['bill_number'] = bill_number
+    app.var['congress'] = congress
+    return render_template("inputSearch2.html", bill_choice=ind, congress=congress, bill_type=bill_type,bill_number=bill_number,bill_title=title,bill_options=options)
+
 
 @app.route('/about')
 def legislatr_about():
