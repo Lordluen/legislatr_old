@@ -44,14 +44,6 @@ body {
   shape-rendering: crispEdges;
 }
 
-.bar {
-  fill: green;
-}
-
-.bar:hover {
-  fill: blue ;
-}
-
 .x.axis path {
   display: none;
 }
@@ -61,6 +53,15 @@ body {
   font-weight: bold;
   padding: 12px;
   background: rgba(0, 0, 255, 1);
+  color: #fff;
+  border-radius: 2px;
+}
+
+.d3-tip2 {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 127, 0, 1);
   color: #fff;
   border-radius: 2px;
 }
@@ -195,7 +196,7 @@ body {
     <div class="container-fluid" id="section2" style="background-color: #ff0000;">
         <div class="row">
             <h1 class="text-center v-center" style="color: #ffffff;">Money</h1>
-            <p class="text-center v-center" style="color: #ffffff;">Select contributor from pie-graph below to see a breakdown of their influence over legislators.</p>
+            <p class="text-center v-center" style="color: #ffffff;">Select contributor from drop down menu below to see a breakdown of their influence over legislators. Only the top ten most influential contributors for this bill are shown.</p>
         </div>
     </div>
 </div>
@@ -204,7 +205,7 @@ body {
             <div class="col-md-4" id="area1">
                 <div class="text-center">
                     <h3>Breakdown of contributions for this bill.</h3>
-                    <p>This is where a pie graph will go, but for now we use a drop down menu with the numbers included.</p>
+                    <p>Select contributor from drop down menu below to see breakdown.</p>
                 </div>
                 <form action="/output2" method="GET">
                     <div class="form-group">
@@ -220,37 +221,78 @@ body {
             </div>
             <div class="col-md-8" id="area2">
                 <div class="text-center">
-                    <p>This is a breakdown of the selected contributor in both USD and % of total contributions tied to this bill.</p>
+                    <p>This is a breakdown of the selected contributor in both USD (green bars) and % of total contributions tied to this bill (blue bars).</p>
                 </div>
                 <script>
-        var margin = {top: 40, right: 20, bottom: 300, left: 200},
+        var margin = {top: 40, right: 100, bottom: 300, left: 200},
         width = 1000 - margin.left - margin.right,
         height = 800 - margin.top - margin.bottom;
 
-        var formatPercent = d3.format("$.");
+        var formatDollar = d3.format("$.");
+
+        var formatPercent = d3.format(".%");
 
         var x = d3.scale.ordinal()
             .rangeRoundBands([0, width], .1);
 
-        var y = d3.scale.linear()
+
+        var y1 = d3.scale.linear()
+            .range([height, 0]);
+
+        var y2 = d3.scale.linear()
             .range([height, 0]);
 
         var xAxis = d3.svg.axis()
             .scale(x)
             .orient("bottom");
 
-        var yAxis = d3.svg.axis()
-            .scale(y)
-            .orient("left")
+        var yAxisLeft = d3.svg.axis()
+            .scale(y1)
+            .orient("left");
+            //.tickFormat(formatDollar);
+
+        var yAxisRight = d3.svg.axis()
+            .scale(y2)
+            .orient("right")
             .tickFormat(formatPercent);
 
         var tip = d3.tip()
-          .attr('class', 'd3-tip')
+          .attr('class', 'd3-tip2')
           .offset([-10, 0])
           .html(function(d) {
             return "<strong>Contribution: $</strong> <span style='color:white'>" + d.Contribution + "</span>";
           })
 
+        var tip2 = d3.tip()
+          .attr('class', 'd3-tip')
+          .offset([-10, 0])
+          .html(function(d) {
+            return "<strong>Influence </strong> <span style='color:white'>" + d.Influence + "</span><strong>%</strong>";
+          })
+
+        function synchronizedMouseOver1(d) {
+            var bar = d3.select(this)
+                .style("fill","red");
+            tip.show(d);
+        };
+
+        function synchronizedMouseOver2(d) {
+            var bar = d3.select(this)
+                .style("fill","red");
+            tip2.show(d);
+        };
+
+        function synchronizedMouseOut1(d) {
+            var bar = d3.select(this)
+                .style("fill","green");
+            tip.hide(d);
+        };
+
+        function synchronizedMouseOut2(d) {
+            var bar = d3.select(this)
+                .style("fill","blue");
+            tip2.hide(d);
+        };
         var svg = d3.select("#area2").append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -258,10 +300,14 @@ body {
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
         
         svg.call(tip);
+        svg.call(tip2);
         
+
         d3.tsv("/static/data.tsv?nocache="+(new Date()).getTime(), type, function(error, data) {
           x.domain(data.map(function(d) { return d.Legislator; }));
-          y.domain([0, d3.max(data, function(d) { return d.Contribution; })]);
+          y1.domain([0, d3.max(data, function(d) { return d.Contribution; })]);
+          y2.domain([0, d3.max(data, function(d) { return d.Influence; })]);
+        
         
           svg.append("g")
               .attr("class", "x axis")
@@ -275,27 +321,64 @@ body {
               });
         
           svg.append("g")
-              .attr("class", "y axis")
-              .call(yAxis)
+              .attr("class", "y axis axisLeft")
+              .call(yAxisLeft);
         
-          svg.selectAll(".bar")
-              .data(data)
-            .enter().append("rect")
+          svg.append("g")
+              .attr("class", "y axis axisRight")
+              .attr("transform", "translate(" + (width+15) + ",0)")
+              .call(yAxisRight);
+        
+          var g = svg.selectAll(".bars")
+                .data(data)
+                .enter().append("g");
+
+          //svg.selectAll(".bar")
+          //    .data(data)
+          //  .enter().append("rect")
+            g.append("rect")
               .attr("class", "bar")
               .attr("x", function(d) { return x(d.Legislator); })
-              .attr("width", x.rangeBand())
-              .attr("y", function(d) { return y(d.Contribution); })
-              .attr("height", function(d) { return height - y(d.Contribution); })
-              .on('mouseover', tip.show)
-              .on('mouseout', tip.hide)
+              .attr("width", x.rangeBand()/2)
+              .attr("y", function(d) { return y1(d.Contribution); })
+              .attr("height", function(d) { return height - y1(d.Contribution); })
+              .style("fill", "green" )
+              .on('mouseover', synchronizedMouseOver1)
+              .on('mouseout', synchronizedMouseOut1);
+
+            g.append("rect")
+              .attr("class", "bar")
+              .attr("x", function(d) { return x(d.Legislator) + (x.rangeBand()/2); })
+              .attr("width", x.rangeBand()/2)
+              .attr("y", function(d) { return y2(d.Influence); })
+              .attr("height", function(d) { return height - y2(d.Influence); })
+              .style("fill", 'blue')
+              .on('mouseover', synchronizedMouseOver2)
+              .on('mouseout', synchronizedMouseOut2);
 
           svg.append("text")
             .attr("x", (width / 2))
             .attr("y", 0 - (margin.top / 2))
             .attr("text-anchor","middle")
-            .style("font-size","16px")
+            .style("font-size","22px")
             .style("text-decoration","underline")
             .text("{{funders[fund]|safe}}");
+
+            svg.append("text")
+                .attr("transform","rotate(-90)")
+                .attr("x", 0 - margin.left)
+                .attr("y", 0 - (2.2*margin.top))
+                .style("text-anchor", "middle")
+                .style("font-size","18px")
+                .text("Contribution (USD)");
+
+            svg.append("text")
+                .attr("transform","rotate(-90)")
+                .attr("x", 0 - margin.left)
+                .attr("y", 0 + (19.5*margin.top))
+                .style("text-anchor", "middle")
+                .style("font-size","18px")
+                .text("Influence (% of total USD from shared contributors)");
         });
 
         d3.exit().remove();

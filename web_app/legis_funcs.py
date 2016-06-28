@@ -117,151 +117,115 @@ def retrieveTitle(bill_type,bill_number,congress,engine):
     return otitle
 
 def retrieveFunding(bill_type,bill_number,congress,engine):
-
-    query = "SELECT * FROM features_legis WHERE bill_type LIKE '"+bill_type+"' AND bill_number LIKE '"+bill_number+"' AND congress = '"+congress+"' ;" #should only be one match.
-    bill_legis = pd.read_sql_query(query,engine) #note to self, bills repeat, I only want the most recent one.
+    
+    legis = pd.read_sql_table('sponsor_list_det',engine)
+    
+    #load bill
+    query = "SELECT * FROM features_legis WHERE bill_type LIKE '"+bill_type+"' AND bill_number 	LIKE '"+bill_number+"' AND congress = '"+congress+"' ;" #should only be one match.
+    bill_legis = pd.read_sql_query(query,engine) #note to self, bills repeat, I only want the 	most recent one.
     #drop useless columns.
-    bill_legis = bill_legis.drop(['bill_type','bill_number','congress','num_amends','index','status','result','final_result'],1)
+    bill_legis = bill_legis.drop	(['bill_type','bill_number','congress','num_amends','index','status','result','final_result'],1)
     #read in legislator info
     legis = pd.read_sql_table('sponsor_list_det',engine)
-
+	
     cols = bill_legis.columns.tolist()
     mat = bill_legis.as_matrix().flatten().tolist()
-
+    
     #list of legislators on bill
     legislators = list()
     for leg in range(0,len(cols)):
         if mat[leg] == 1:
-                legislators.append(cols[leg])
-    #loop through legislators and get funding df for each one, stored in a list.
-    legis_funds = list()
+            legislators.append(cols[leg])
+            
+
+    legis_funds = list() #will be a list to hold the dataframes of contributions for each legislator
     legis_names = list()
     for leg in legislators:
-        #first get row in legis
-        legis_ind = legis[legis.sponsor == leg]
-        if legis_ind['index'].size > 1: #something has gone wrong.
-            print('Something has gone wrong.')
-            break
-        legis_funds.append(pull_contributions(legis_ind,legis,engine))
-        legis_names.append(legis_ind.qsponsor.iloc[0])
-    allfunds = list()
-    allcontribs = list()
-    #do what I need with one dataframe first
-    counter = 0
-    for df in legis_funds :
-        #sum up contributions from the same contributers
-        u_reg = np.unique(df.registrantid) #all unique contributors
-        allcontribs.append(u_reg)
-        u_reg_name = list() #name of contributor
-        u_reg_con = list() #sum of contributions
-        for rid_ind in range(0,len(u_reg)):
-            regid = u_reg[rid_ind] #id for contributor
-            regname = df[df.registrantid == regid]['registrantname'].iloc[0]
-            tot_money = np.sum(df[df.registrantid == regid]['amount'])
-            u_reg_name.append(regname)
-            u_reg_con.append(tot_money)
-        u_reg = u_reg.tolist()
-        temp_name = legis_names[counter]
-        temp_name = [temp_name]*len(u_reg)
-        allfunds.append(list(zip(u_reg,u_reg_name,u_reg_con,temp_name)))
-        #print(allfunds[0][0])
-        counter = counter+1
-    #identify all shared contributors
-    sharedcontribs = list()
-    if len(allcontribs) == 1: #there is only one legislator
-        sharedcontribs = allcontribs[0].tolist()
+        #get index of legislator
+        legis_ind = legis[legis.sponsor == leg].index[0]
+        legis_names.append(legis[legis.sponsor == leg]['qsponsor'].iloc[0])
+        #generate tableid
+        tableid = 'legis'+str(legis_ind)
+        #read in the contribution table for this legislator and append to list.
+        legis_funds.append(pd.read_sql_table(tableid,engine))
+
+    #deal with case of only one legislator.
+    if len(legis_names) == 1: 
+        onlyFund = legis_funds[0]
+        u_shared_rids = np.unique(onlyFund.rid)
+        u_shared_names = list()
+        for rid in u_shared_rids:
+            u_shared_names.append(onlyFund[onlyFund.rid==rid]['name'].iloc[0])
     else:
-        for l1 in range(0,len(allcontribs)-1) : #loop over main list
-            for item in allcontribs[l1] : #loop over all id numbers in main list
-                for l2 in range(l1+1,len(allcontribs)): #loop over other lists to check for id number (item)
-                    otherlist = allcontribs[l2]
-                    if item in otherlist:
-                        sharedcontribs.append(item)
-                        break
-
-    u_sharedcontribs = np.unique(sharedcontribs)
-    shared_con = list() #list that will hold all contribution tuples that come from contributors that donate to other sponsors
-    legislator_num = 0 #used to track which legislator the funds relate to.
-    for rid in u_sharedcontribs : #go through registrant ids in shared contribs
-        for l in allfunds: #list of all lists containing tuples of contributors
-            for tup in l: #loop through each tupple in a list. #could be vectorized I bet
-                if tup[0] == rid:
-                    shared_con.append(tup)
-                    break
-
-    #loop over shared money to get total contributed from the shared contributors.
-    tot_u_shared_contribs = list()
-    for item in range(0,len(u_sharedcontribs)):
-        tot = 0
-        rid = u_sharedcontribs[item]
-        for tup in shared_con:
-            if tup[0] == rid:
-                tot = tot + tup[2]
-                name = tup[1] #could be placed in boolean to only occur once, but this is still not slow.
-        tot_u_shared_contribs.append((rid,name,tot))
-#sort to get the largest donators of the shared contributors
-    tot_u_shared_contribs = sorted(tot_u_shared_contribs, key=lambda tup: tup[2], reverse=True)
-
-
-    #get influence metrics
-    contrib_df = pd.DataFrame(shared_con, columns=["rid","reg_name","amount","legis"])
-    legis = np.unique(contrib_df["legis"])
-    rids = np.unique(contrib_df["rid"])
-    shared_con_inf = list()
-    influence_df = pd.DataFrame()
-    for leg in legis:
-        for rid in rids:
-            reg_name = contrib_df[contrib_df.rid == rid]["reg_name"].iloc[0]
-            cons = contrib_df[(contrib_df.legis == leg) & (contrib_df.rid == rid)]
-            other_cons = contrib_df[(contrib_df.legis == leg)]
-            if(len(cons)) == 0:
-                inf = 0.
-            else:
-                amount = cons['amount'].iloc[0] #should only be one row in cons
-                other_amount = sum(other_cons['amount'].tolist())
-                inf = amount/other_amount #percent influence of this organization as compared to other shared contributors.
-            inf_tup = (rid,reg_name,inf,leg)
-            shared_con_inf.append(inf_tup)
+        #now need to get shared contributors. Do this by concatinating rid's into a big list and keeping only ones that are duplicates.
+        #loop through and make a new dataframe with just the amount, rid, and name.
+        all_dfs = pd.DataFrame()
+        for df in legis_funds:
+            all_dfs = pd.concat([all_dfs,df[['amount','name','rid']]],axis=0)
     
-    #loop over shared money to get total contributed from the shared contributors.
-    tot_u_shared_contribs_inf = list()
-    for item in range(0,len(u_sharedcontribs)):
-        tot = 0
-        rid = u_sharedcontribs[item]
-        for tup in shared_con_inf:
-            if tup[0] == rid:
-                tot = tot + tup[2]
-                name = tup[1] #could be placed in boolean to only occur once, but this is still not slow.
-        tot_u_shared_contribs_inf.append((rid,name,tot))
-    #sort to get the largest donators of the shared contributors
-    tot_u_shared_contribs_inf = sorted(tot_u_shared_contribs_inf, key=lambda tup: tup[2], reverse=True)
+        #get duplicate (shared) contributors based on rid
+        duplicates = all_dfs[all_dfs.duplicated(subset='rid',keep=False)]
+        #get unique rid's of shared contributors.
+        u_shared_rids = np.unique(duplicates['rid'])
+        #get the names of the unique rids
+        u_shared_names = list()
+        for rid in u_shared_rids:
+            u_shared_names.append(duplicates[duplicates.rid==rid]['name'].iloc[0])
+    
+    #now I need to calculate influence each rid had on a legislator. So first find intersection of each legislator with unique ids
+    shared_funds = list()
+    for df in legis_funds:
+        shared_contribs = df[df['rid'].isin(u_shared_rids)]
+        #get total amount of money in shared_contribs
+        total_contribs = sum(shared_contribs.amount.tolist())
+        #create a new column in shared contribs with influence (ratio of money to total money).
+        shared_contribs['influence'] = (shared_contribs.amount/total_contribs)*100.
+        shared_funds.append(shared_contribs)
 
-    return (tot_u_shared_contribs,shared_con,tot_u_shared_contribs_inf,shared_con_inf) #return the shared contributions (totals, indiv)
+    #this is the slowest step....
+    #calculate top 10 contributors based on influence.
+    total_inf = np.zeros(len(u_shared_rids))
+    total_money = np.zeros(len(u_shared_rids))
+
+    all_df = pd.concat(shared_funds)
+    for i in range(0,len(u_shared_rids)):
+        rid = u_shared_rids[i]
+        match = all_df[all_df.rid == rid]
+        total_inf[i] = total_inf[i]+sum(match['influence'])
+        total_money[i] = total_money[i]+sum(match['amount'])
+    avg_inf = total_inf/len(shared_funds)
+    avg_money = total_money/len(shared_funds)
+    
+    #zip together u_shared_rids, u_shared_names, total_inf, total_money
+    shared_con_zip = list(zip(u_shared_rids.tolist(),u_shared_names,avg_inf.tolist(),avg_money.tolist()))
+    #sort based on influence
+    shared_con_zip = sorted(shared_con_zip, key=lambda tup: tup[2], reverse=True)
+
+    return (shared_con_zip, shared_funds, legis_names) #(totals, individual df's, legislator names that go with the individual dfs)
 
 def makeBarPlotFile(contrib_tup,rank) :
     #plot the money distribution to individual senators by the largest contributor
-    rid = contrib_tup[2][rank][0]
-    name = contrib_tup[2][rank][1]
-    total = contrib_tup[2][rank][2]
-    toPlot1 = [x for x in contrib_tup[1] if x[0] == rid]
-    toPlot2 = [x for x in contrib_tup[3] if x[0] == rid]
+    rid = contrib_tup[0][rank][0]
     #output to intermediate file
-    x1 = list() #money
-    x2 = list() #influence
-    y1 = list()  #name
-    y2 = list()  #name
-    for i in range(0,len(toPlot1)):
-        x1.append(toPlot1[i][3])
-        #x2.append(toPlot2[i][3])
-        y1.append(toPlot1[i][2])
-        y2.append(toPlot2[i][2])
+    funds = list() #money
+    inf = list() #influence
+    legis = list()  #name
+    count = 0
+    for j in contrib_tup[1]:
+        legis.append(contrib_tup[2][count])
+        count = count + 1
+        match = j[j.rid == rid]
+        if len(match)>0:
+            funds.append(match['amount'].iloc[0])
+            inf.append(match['influence'].iloc[0])
+        else:
+            funds.append(0.)
+            inf.append(0.)
+
     with open("legislatr/static/data.tsv", "w") as record_file:
         record_file.write("Legislator\tContribution\tInfluence\n")
-        for i in range(0,len(x1)):
-            record_file.write(str(x1[i])+"\t"+str(y1[i])+"\t"+str(round(y2[i]*100.,2))+"\n")
-    #with open("legislatr/static/data_inf.tsv","w") as record_file:
-    #    for i in range(0,len(x2)):
-    #        record_file.write(str(x2[i])+"\t"+str(y2[i])+"\n")
+        for i in range(0,len(legis)):
+            record_file.write(str(legis[i])+"\t"+str(funds[i])+"\t"+str(round(inf[i],2))+"\n")
     return
 
 def get_bills_list(bill_type,congress,engine) :

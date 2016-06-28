@@ -79,7 +79,6 @@ def legislatr_about():
 
 @app.route('/output')
 def legislatr_output():
-    #pull 'birth_month' from input field and store it
     #bill_type = request.args.get('bill_type')
     #congress = request.args.get('congress')
     #if bill_type is None:
@@ -111,15 +110,15 @@ def legislatr_output():
     #title = legis_funcs.retrieveTitle(bill_type,bill_number,congress,db)
     title = app.var['title']
     funding_tup = legis_funcs.retrieveFunding(bill_type,bill_number,congress,db)
-    legis_funcs.makeBarPlotFile(funding_tup,0) #for now just do the top ranked funder (rank = 0)
-    top_five_funders = list()
-    for x in range(0,5):
-        top_five_funders.append(funding_tup[2][x][1]) #the names of the top 5 contributors.
-    app.var['top_five_funders'] = top_five_funders
     app.var['funding_tup'] = funding_tup
+    legis_funcs.makeBarPlotFile(funding_tup,0) #for now just do the top ranked funder (rank = 0)
+    top_ten_funders = list()
+    for x in range(0,10):
+        top_ten_funders.append(funding_tup[0][x][1]) #the names of the top 10 contributors.
+    app.var['top_ten_funders'] = top_ten_funders
     return render_template("output.html",the_result = the_result,
         the_confidence = int(round(the_confidence)),
-        funders = top_five_funders,
+        funders = top_ten_funders,
         img_file = img_file, img_color = img_color,
         bill_title = title,
         bill_type=bill_type, bill_number=bill_number, congress=congress)
@@ -133,14 +132,14 @@ def legislatr_output2():
     img_color = app.var['img_color']
     the_confidence = app.var['the_confidence']
     the_result = app.var['the_result']
-    top_five_funders = app.var['top_five_funders']
+    top_ten_funders = app.var['top_ten_funders']
     funding_tup = app.var['funding_tup']
     title = app.var['title']
     funder = int(request.args.get('contributor'))
     legis_funcs.makeBarPlotFile(funding_tup,funder)
     return render_template("output2.html",the_result=the_result,
         the_confidence = int(round(the_confidence)),
-        funders = top_five_funders,
+        funders = top_ten_funders,
         fund = funder,
         img_file = img_file, img_color= img_color,
         bill_title = title,

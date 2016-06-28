@@ -196,7 +196,7 @@ body {
     <div class="container-fluid" id="section2" style="background-color: #ff0000;">
         <div class="row">
             <h1 class="text-center v-center" style="color: #ffffff;">Money</h1>
-            <p class="text-center v-center" style="color: #ffffff;">Select contributor from pie-graph below to see a breakdown of their influence over legislators.</p>
+            <p class="text-center v-center" style="color: #ffffff;">Select contributor from drop down menu below to see a breakdown of their influence over legislators. Only the top ten most influential contributors for this bill are shown.</p>
         </div>
     </div>
 </div>
@@ -205,7 +205,7 @@ body {
             <div class="col-md-4" id="area1">
                 <div class="text-center">
                     <h3>Breakdown of contributions for this bill.</h3>
-                    <p>This is where a pie graph will go, but for now we use a drop down menu with the numbers included.</p>
+                    <p>Select contributor from drop down menu below to see breakdown.</p>
                 </div>
                 <form action="/output2" method="GET">
                     <div class="form-group">
@@ -221,7 +221,7 @@ body {
             </div>
             <div class="col-md-8" id="area2">
                 <div class="text-center">
-                    <p>This is a breakdown of the selected contributor in both USD and % of total contributions tied to this bill.</p>
+                    <p>This is a breakdown of the selected contributor in both USD (green bars) and % of total contributions tied to this bill (blue bars).</p>
                 </div>
                 <script>
         var margin = {top: 40, right: 100, bottom: 300, left: 200},
